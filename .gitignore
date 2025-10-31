@@ -1,0 +1,45 @@
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+venv/
+.env/
+.env
+.envrc
+.env.local
+.venv/
+Pipfile.lock
+poetry.lock
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Cache / Build
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+__pypackages__/
+.coverage
+htmlcov/
+
+# Node / Frontend (if applicable)
+node_mo_
