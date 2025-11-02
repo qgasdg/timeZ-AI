@@ -5,8 +5,18 @@ import pandas as pd
 import json
 import os
 import re
+import traceback
 
-from pprint import pprint
+ERROR_LOG_PATH = "logic/syllabus/error.txt"
+
+
+def log_error(file_name: str, error: Exception):
+    """에러 내용을 error.txt에 누적 저장"""
+    os.makedirs(os.path.dirname(ERROR_LOG_PATH), exist_ok=True)
+    with open(ERROR_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(f"\n[❌ {file_name}] {type(error).__name__}: {error}\n")
+        f.write(traceback.format_exc())
+        f.write("\n" + "-" * 80 + "\n")
 
 
 def extract_table_between(records: list[dict], start_idx: int, end_idx: int) -> dict:
@@ -244,24 +254,26 @@ if __name__ == "__main__":
         if not file.endswith(".xlsx"):
             continue
 
-        # 파일별 경로 정의
         src_xlsx = os.path.join(xlsx_path, file)
         fixed_xlsx = os.path.join(fixed_path, file)
         json_file = os.path.join(json_path, os.path.splitext(file)[0] + ".json")
 
         print(f"📗 처리 중: {src_xlsx}")
 
-        # 1️⃣ 비표준 XLSX를 표준 엑셀로 자동 재저장
-        fix_applynumberform_in_xlsx(src_xlsx, fixed_xlsx)
-
-        # 2️⃣ JSON 변환
-        data = xlsx_to_json(fixed_xlsx)
-        print("✅ 변환 완료")
-
-        # 3️⃣ JSON 파일 저장
         try:
+            # 1️⃣ 비표준 XLSX 재저장
+            fix_applynumberform_in_xlsx(src_xlsx, fixed_xlsx)
+
+            # 2️⃣ JSON 변환
+            data = xlsx_to_json(fixed_xlsx)
+            print("✅ 변환 완료")
+
+            # 3️⃣ JSON 파일 저장
             with open(json_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             print(f"✅ JSON 파일 저장 완료: {json_file}")
+
         except Exception as e:
-            print(f"❌ JSON 저장 실패: {e}")
+            print(f"❌ {file} 처리 중 오류 발생: {e}")
+            log_error(file, e)
+            continue
