@@ -1,5 +1,5 @@
-from Utils import load_json_files, tfidf_similarity, bert_similarity, preprocess_json
-import numpy as np
+from Utils import load_json_files, preprocess_json
+
 
 folder_path = "logic/syllabus/json"
 json_files = load_json_files(folder_path)  # list[dict]

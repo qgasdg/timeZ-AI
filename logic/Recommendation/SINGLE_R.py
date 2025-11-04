@@ -1,4 +1,4 @@
-from Utils import load_json_files, tfidf_similarity, bert_similarity, preprocess_json
+from Utils import load_json_files, preprocess_json
 import numpy as np
 
 if __name__ == "__main__":

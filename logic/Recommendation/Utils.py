@@ -1,3 +1,4 @@
+import numpy as np
 import os, json, re
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,25 +12,8 @@ import time
 
 ALLOW_KEYS = {
     "교과목명",
-    "교과목영문명",
     "강의목표",
     "강의개요",
-    "주차별 강의진행계획서",
-}
-
-DENY_KEYS = {
-    "평가기준",
-    "평가기준\n세부내역",
-    "강좌평가방법",
-    "수업 방법",
-    "강의진행방식",
-    "수강시유의사항",
-    "특별지원관련",
-    "Office Hour\n(상담시간)",
-    "강의시간표",
-    "교수프로필(자세히보기)",
-    "부교재및참고도서",
-    "교재",
 }
 
 
@@ -47,15 +31,13 @@ def flatten_week_plan(week_plan: dict) -> str:
 def select_fields(doc: dict) -> dict:
     picked = {}
     for k, v in doc.items():
-        if k in DENY_KEYS:
-            continue
         if k in ALLOW_KEYS:
             if k == "주차별 강의진행계획서" and isinstance(v, dict):
                 picked[k] = flatten_week_plan(v)
             else:
                 picked[k] = str(v)
     if not picked:
-        picked = {k: str(v) for k, v in doc.items() if k not in DENY_KEYS}
+        picked = {k: str(v) for k, v in doc.items() if k in ALLOW_KEYS}
     return picked
 
 
@@ -83,13 +65,7 @@ def clean_text(text: str) -> str:
 # 3) 문서 만들기: 필드 가중치 적용(선택)
 ############################################
 
-FIELD_WEIGHTS = {
-    "교과목명": 1.0,
-    "교과목영문명": 1.0,
-    "강의목표": 1.0,
-    "강의개요": 1.0,
-    "주차별 강의진행계획서": 1.0,
-}
+FIELD_WEIGHTS = {"교과목명": 3.0, "강의목표": 1.0, "강의개요": 1.0}
 
 
 def build_weighted_text(picked_fields: dict) -> str:
@@ -102,12 +78,7 @@ def build_weighted_text(picked_fields: dict) -> str:
     return " ".join(parts).strip()
 
 
-############################################
-# 4) TF-IDF 유사도
-############################################
-
-
-def tfidf_similarity(texts: np.ndarray) -> np.ndarray:
+def to_tfidf(texts: np.ndarray):
     vectorizer = TfidfVectorizer(
         ngram_range=(1, 2),
         min_df=2,
@@ -116,31 +87,17 @@ def tfidf_similarity(texts: np.ndarray) -> np.ndarray:
         norm="l2",
     )
     X = vectorizer.fit_transform(texts)
-
-    start = time.time()
-    x = cosine_similarity(X)
-    end = time.time()
-    print(f"TF-IDF similarity computed in {end - start:.2f} seconds")
-    return x
+    return X
 
 
-############################################
-# 5) BERT 임베딩 유사도(의미 기반)
-############################################
-
-
-def bert_similarity(
+def to_bert(
     texts: np.ndarray,
     model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-) -> np.ndarray:
+):
     model = SentenceTransformer(model_name)
     emb = model.encode(
         texts.tolist(), normalize_embeddings=True
     )  # np.ndarray → list 변환
-    start = time.time()
-    emb = cosine_similarity(emb)
-    end = time.time()
-    print(f"BERT similarity computed in {end - start:.2f} seconds")
     return emb
 
 
@@ -150,8 +107,8 @@ def bert_similarity(
 
 
 def hybrid_similarity(texts: np.ndarray, alpha: float = 0.65) -> np.ndarray:
-    S_tfidf = tfidf_similarity(texts)
-    S_bert = bert_similarity(texts)
+    S_tfidf = cosine_similarity(to_tfidf(texts))
+    S_bert = cosine_similarity(to_bert(texts))
     return alpha * S_bert + (1 - alpha) * S_tfidf
 
 
@@ -162,7 +119,7 @@ def hybrid_similarity(texts: np.ndarray, alpha: float = 0.65) -> np.ndarray:
 
 def load_json_files(folder_path: str) -> np.ndarray:
     all_data = []
-    for file in os.listdir(folder_path):
+    for file in sorted(os.listdir(folder_path)):
         if file.endswith(".json"):
             with open(os.path.join(folder_path, file), "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -185,20 +142,22 @@ def preprocess_json(json: np.ndarray) -> np.ndarray:
 ############################################
 
 if __name__ == "__main__":
-    folder_path = "logic/syllabus/"
+    folder_path = "syllabus/json"
     texts = load_json_files(folder_path)
     titles = np.array(
         [os.path.splitext(f)[0] for f in os.listdir(folder_path) if f.endswith(".json")]
     )
 
     # TF-IDF
-    S_tfidf = tfidf_similarity(texts)
+    tfidf = to_tfidf(texts)
+    S_tfidf = cosine_similarity(tfidf)
     print("[TF-IDF] cosine similarity matrix:")
     print(np.round(S_tfidf, 3))
     print()
 
     # BERT
-    S_bert = bert_similarity(texts)
+    bert = to_bert(texts)
+    S_bert = cosine_similarity(bert)
     print("[BERT] cosine similarity matrix:")
     print(np.round(S_bert, 3))
     print()
