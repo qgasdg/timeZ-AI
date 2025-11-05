@@ -1,51 +1,73 @@
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
 import numpy as np
-import pandas as pd
-import ast
-import faiss
 from sklearn.preprocessing import normalize
+import os
+
+os.environ["OPENAI_API_KEY"] = (
+    "REDACTED_OPENAI_KEY"
+)
 
 
 def recommendation(user_courses):
-    df["학수번호"] = df["학수번호"].astype(str).str.strip()
+    # 1. FAISS 인덱스 로드
+    embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
+    db = FAISS.load_local(
+        "faiss_index", embedding_model, allow_dangerous_deserialization=True
+    )
 
-    # 3️⃣ 수강 과목 필터 + 중복 학수번호 제거
-    mask = df["학수번호"].isin(user_courses)
-    taken_df = df.loc[mask].drop_duplicates(subset="학수번호", keep="first")
-    print(f"매칭된 과목 수 (중복 제거 후): {len(taken_df)}")
+    # 2. InMemoryDocstore 접근 (버전 호환)
+    if hasattr(db.docstore, "_dict"):
+        all_docs = list(db.docstore._dict.values())  # InMemoryDocstore 내부 dict
+    else:
+        all_docs = list(db.docstore.values())  # 이미 dict인 경우
 
-    # 4️⃣ 사용자 평균 임베딩 계산
-    user_embeds = np.vstack(taken_df["embedding"].values)
+    # 3. 인덱스-메타데이터 정합 확인
+    n_index = db.index.ntotal
+    n_meta = len(all_docs)
+    print(f"인덱스 벡터 수: {n_index}")
+    print(f"메타데이터 수: {n_meta}")
+
+    if n_index != n_meta:
+        print(f"⚠️ 불일치 감지됨 — 메타데이터 {n_meta}개, 인덱스 {n_index}개")
+        all_docs = all_docs[:n_index]
+
+    # 4. 메타데이터 및 임베딩 추출
+    학수번호 = [d["metadata"]["학수번호"] for d in all_docs]
+    분반 = [d["metadata"]["분반"] for d in all_docs]
+    embeddings = np.array(db.index.reconstruct_n(0, n_index)).astype("float32")
+
+    # 5. 사용자 수강 과목 필터링
+    mask = np.isin(학수번호, user_courses)
+    taken_indices = np.where(mask)[0]
+
+    if len(taken_indices) == 0:
+        print("⚠️ 수강 과목과 매칭되는 데이터가 없습니다.")
+        return []
+
+    # 6. 사용자 평균 임베딩 계산
+    user_embeds = embeddings[taken_indices]
     user_profile = user_embeds.mean(axis=0, keepdims=True).astype("float32")
-
-    # 5️⃣ 임베딩 정규화 (코사인 유사도용)
-    embeddings_norm = normalize(embeddings, axis=1).astype("float32")
     user_norm = normalize(user_profile, axis=1).astype("float32")
 
-    # 6️⃣ FAISS Index 생성 (Inner Product → Cosine 유사도)
-    dim = embeddings.shape[1]
-    index = faiss.IndexFlatIP(dim)
-    index.add(embeddings_norm)
+    # 7. 유사도 기반 검색 (Top 1000)
+    k = min(1000, n_index)
+    sims, idx = db.index.search(user_norm, k)
 
-    # 7️⃣ 검색 (Top 200 정도 뽑고 그중 중복 제거)
-    k = 200
-    sims, idx = index.search(user_norm, k)
+    # 8. 추천 결과 구성
+    rec_indices = idx[0]
+    recs = []
+    for i in rec_indices:
+        if i >= len(all_docs):
+            continue  # 안전 가드
+        meta = all_docs[i]["metadata"]
+        if meta["학수번호"] not in user_courses:
+            recs.append([meta["학수번호"], meta["분반"]])
 
-    # 8️⃣ 추천 결과 DataFrame 구성
-    rec_df = df.iloc[idx[0]].copy()
-    rec_df["similarity"] = sims[0]
-
-    return rec_df["학수번호"]
+    return recs
 
 
 if __name__ == "__main__":
-
-    # 1️⃣ CSV 불러오기
-    file_path = "embeddings.csv"
-    df = pd.read_csv(file_path)
-    df["embedding"] = df["embedding"].apply(ast.literal_eval)
-    embeddings = np.vstack(df["embedding"].values).astype("float32")
-
-    # 2️⃣ 사용자 수강 과목 (학수번호 기준)
     user_courses = [
         "GEB1112",
         "GEB1114",
@@ -60,6 +82,8 @@ if __name__ == "__main__":
         "GEE4026",
     ]
 
-    recommended_courses = recommendation(user_courses)
-    print("추천 과목 학수번호:")
-    print(recommended_courses.tolist())
+    recs = recommendation(user_courses)
+    print("\n추천 과목 (학수번호, 분반):")
+    print(len(recs), "개")
+    for r in recs[:10]:
+        print(r)
