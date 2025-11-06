@@ -22,15 +22,8 @@ def recommendation(user_courses):
     else:
         all_docs = list(db.docstore.values())  # 이미 dict인 경우
 
-    # 3. 인덱스-메타데이터 정합 확인
+    # 3. 인덱스
     n_index = db.index.ntotal
-    n_meta = len(all_docs)
-    print(f"인덱스 벡터 수: {n_index}")
-    print(f"메타데이터 수: {n_meta}")
-
-    if n_index != n_meta:
-        print(f"⚠️ 불일치 감지됨 — 메타데이터 {n_meta}개, 인덱스 {n_index}개")
-        all_docs = all_docs[:n_index]
 
     # 4. 메타데이터 및 임베딩 추출
     학수번호 = [d["metadata"]["학수번호"] for d in all_docs]
@@ -58,8 +51,6 @@ def recommendation(user_courses):
     rec_indices = idx[0]
     recs = []
     for i in rec_indices:
-        if i >= len(all_docs):
-            continue  # 안전 가드
         meta = all_docs[i]["metadata"]
         if meta["학수번호"] not in user_courses:
             recs.append([meta["학수번호"], meta["분반"]])

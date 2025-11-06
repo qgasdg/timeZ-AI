@@ -7,12 +7,10 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores.faiss import dependable_faiss_import
 import os
 
-os.environ["OPENAI_API_KEY"] = (
-    "REDACTED_OPENAI_KEY"  # 네 API 키 입력
-)
+os.environ["OPENAI_API_KEY"] = ""
 
 # 1️⃣ CSV 불러오기 및 정제
-df = pd.read_csv("embeddings.csv")
+df = pd.read_csv("logic/results/embeddings.csv")
 df["embedding"] = df["embedding"].apply(ast.literal_eval)
 
 # 결측값 제거
@@ -41,7 +39,7 @@ db = FAISS(
     embedding_function=embedding_model,
     index=index,
     docstore=InMemoryDocstore(
-        {ids[i]: {"page_content": "", "metadata": metadatas[i]} for i in range(len(df))}
+        {i: {"page_content": "", "metadata": metadatas[i]} for i in range(len(df))}
     ),
     index_to_docstore_id={i: ids[i] for i in range(len(df))},
 )
