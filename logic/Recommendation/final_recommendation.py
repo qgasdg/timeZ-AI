@@ -131,17 +131,6 @@ def final_recommendation(user_courses):
 if __name__ == "__main__":
     user_courses = [
         # 기존 교양 과목
-        "GEB1112",
-        "GEB1114",
-        "GEB1116",
-        "GEB1126",
-        "GEB1143",
-        "GEB1151",
-        "GED4009",
-        "GED2016",
-        "GED5003",
-        "GEE4007",
-        "GEE4026",
         # 추가 전공 및 교양 과목
         "ACE2901",
         "ACE2902",
@@ -180,10 +169,12 @@ if __name__ == "__main__":
 
     print("\n=== GE 과목 추천 결과 (상위 10개) ===")
     # GE로 시작하는 과목만 필터링
-    ge_courses = [i for i in recommendations if i[0].startswith("GE")]
+    ge_courses = list(
+        {i[0]: i for i in recommendations if i[0].startswith("GE")}.values()
+    )
 
     # 상위 10개만 출력
-    for i in ge_courses[:10]:
+    for i in ge_courses[:20]:
         row = df[df["학수번호"] == i[0]]
         if not row.empty:
             print(row["교과목명"].values[0])
