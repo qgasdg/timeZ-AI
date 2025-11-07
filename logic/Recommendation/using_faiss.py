@@ -4,9 +4,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 import os
 
-os.environ["OPENAI_API_KEY"] = (
-    "REDACTED_OPENAI_KEY"
-)
+os.environ["OPENAI_API_KEY"] = ""
 
 
 def recommendation(user_courses):
@@ -78,3 +76,41 @@ if __name__ == "__main__":
     print(len(recs), "개")
     for r in recs[:10]:
         print(r)
+
+    import pandas as pd
+
+    # 1. CSV 불러오기
+    df = pd.read_csv("logic/results/syllabus_merged.csv")
+
+    # 2. 형식 통일 (분반: 1.0 → '001')
+    df["학수번호"] = df["학수번호"].astype(str)
+    df["분반"] = df["분반"].apply(
+        lambda x: f"{int(float(x)):03d}" if pd.notna(x) else x
+    )
+
+    # 3. 추천 결과 DataFrame 변환
+    target_df = pd.DataFrame(recs, columns=["학수번호", "분반"])
+    target_df["학수번호"] = target_df["학수번호"].astype(str)
+    target_df["분반"] = target_df["분반"].astype(str).str.zfill(3)
+
+    # 4. 병합하여 교과목명 추가
+    merged = target_df.merge(
+        df[["학수번호", "분반", "교과목명"]], on=["학수번호", "분반"], how="left"
+    )
+
+    # 5. 결과 출력
+    print("\n추천 결과 (학수번호, 분반, 교과목명):")
+    print(merged.head(20))
+
+    ge_courses = merged[merged["학수번호"].str.startswith("GE")].head(10)
+    print(ge_courses)
+
+    # GE로 시작하는 추천 과목 중 중복 제거 + 상위 10개
+    ge_courses = (
+        merged[merged["학수번호"].str.startswith("GE")]
+        .drop_duplicates(subset=["교과목명"])
+        .head(10)
+    )
+
+    print("\nGE로 시작하는 중복 제거 추천 과목 10개:")
+    print(ge_courses)

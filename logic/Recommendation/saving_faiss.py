@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import ast
 from langchain_community.vectorstores import FAISS
-from langchain_community.docstore import InMemoryDocstore
 from langchain_openai import OpenAIEmbeddings
+from langchain_community.docstore import InMemoryDocstore
 from langchain_community.vectorstores.faiss import dependable_faiss_import
 import os
 
