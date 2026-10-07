@@ -6,7 +6,7 @@ os.environ["OPENAI_API_KEY"] = ""
 
 embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
 db = FAISS.load_local(
-    "logic/Results/faiss_index", embedding_model, allow_dangerous_deserialization=True
+    "logic/results/faiss_index", embedding_model, allow_dangerous_deserialization=True
 )
 
 # InMemoryDocstore 접근
