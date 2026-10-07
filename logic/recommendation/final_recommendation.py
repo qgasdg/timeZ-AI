@@ -127,7 +127,6 @@ def final_recommendation(user_courses):
 
 
 if __name__ == "__main__":
-    os.environ["OPENAI_API_KEY"] = ""
     user_courses = [
         # 기존 교양 과목
         # 추가 전공 및 교양 과목
