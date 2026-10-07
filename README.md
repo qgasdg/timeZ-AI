@@ -37,15 +37,21 @@
 
 ## 파이프라인
 
-| 단계 | 스크립트 | 입력 → 출력 |
-|---|---|---|
-| 1. 수집 | `convert/download_xlsx.py`, `convert/download_html.py` | `results/filtered_*.csv`의 강의 목록 → 강의계획서 xlsx·html |
-| 2. 변환 | `convert/xlsx_to_json.py`, `convert/html_to_json.py` | xlsx·html → 강의별 JSON |
-| 3. 정규화 | `convert/normalize_json.py` → `normalize_json2.py` → `normalize_json3.py` → `convert_keys_to_english.py` | JSON → 키를 통일한 CSV |
-| 4. 임베딩 | `recommendation/embedding.py` (OpenAI `text-embedding-3-small`)<br>`recommendation/bert_embedding.py` (`paraphrase-multilingual-MiniLM-L12-v2`) | 과목명·강의목표·강의개요 → 벡터 |
-| 5. 인덱스 | `recommendation/saving_faiss.py` | 임베딩 → `faiss_index/` |
-| 6. 추천 | `recommendation/final_recommendation.py` | 들은 과목 목록 → 추천 학수번호·분반 |
-| 7. 시각화 | `recommendation/visualization.ipynb` | 임베딩 → t-SNE 3D + KMeans 그래프 |
+1. **수집**: `results/filtered_*.csv`의 강의 목록 → 강의계획서 xlsx·html
+   - `convert/download_xlsx.py`, `convert/download_html.py`
+2. **변환**: xlsx·html → 강의별 JSON
+   - `convert/xlsx_to_json.py`, `convert/html_to_json.py`
+3. **정규화**: JSON → 키를 통일한 CSV
+   - `convert/normalize_json.py` → `normalize_json2.py` → `normalize_json3.py` → `convert_keys_to_english.py`
+4. **임베딩**: 과목명·강의목표·강의개요 → 벡터
+   - `recommendation/embedding.py` (OpenAI `text-embedding-3-small`)
+   - `recommendation/bert_embedding.py` (`paraphrase-multilingual-MiniLM-L12-v2`)
+5. **인덱스**: 임베딩 → `faiss_index/`
+   - `recommendation/saving_faiss.py`
+6. **추천**: 들은 과목 목록 → 추천 학수번호·분반
+   - `recommendation/final_recommendation.py`
+7. **시각화**: 임베딩 → t-SNE 3D + KMeans 그래프
+   - `recommendation/visualization.ipynb`
 
 > 강의계획서 원문(xlsx·html·JSON·CSV)은 저작권과 교수 개인정보 때문에 레포에 넣지 않았습니다. 1~4단계를 다시 돌리려면 1단계부터 직접 수집해야 합니다.
 
