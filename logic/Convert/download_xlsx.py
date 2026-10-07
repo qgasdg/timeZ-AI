@@ -17,13 +17,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 # =========================================
 # 기본 설정
 # =========================================
-DOWNLOAD_DIR = "~/Downloads"
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", os.path.expanduser("~/Downloads"))
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 SAVE_DIR = os.path.join(DOWNLOAD_DIR, "report")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-SESSION_ID = "REDACTED_SESSION_ID"
+SESSION_ID = os.environ["INHA_SESSION_ID"]
 
 CHECKPOINT_FILE = "download_failures.json"
 MAX_ROUNDS = 3

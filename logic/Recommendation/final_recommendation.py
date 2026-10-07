@@ -157,7 +157,9 @@ if __name__ == "__main__":
     recommendations = final_recommendation(user_courses)
     print("최종 추천 과목 학수번호:", recommendations)
 
-    df = pd.read_csv("logic/results/syllabus_final.csv")
+    df = pd.read_csv(
+        "logic/results/bert_embeddings.csv", usecols=["교과목명", "학수번호", "분반"]
+    )
 
     for i in recommendations:
         row = df[df["학수번호"] == i[0]]

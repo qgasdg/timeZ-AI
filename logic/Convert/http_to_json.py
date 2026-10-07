@@ -1,13 +1,14 @@
 
 import io
 import json
+import os
 import requests
 
 import pandas as pd
 from bs4 import BeautifulSoup
 
 
-session_id = "REDACTED_SESSION_ID"
+session_id = os.environ["INHA_SESSION_ID"]
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Whale/4.34.340.10 Safari/537.36",
     "Cookie": f"ASP.NET_SessionId={session_id};",

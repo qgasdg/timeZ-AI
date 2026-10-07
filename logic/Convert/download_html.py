@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 # ==============================
 # 경로 설정
 # ==============================
-DOWNLOAD_DIR = "~/Downloads"
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", os.path.expanduser("~/Downloads"))
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # 이 파일이 있는 디렉터리 (스크립트 위치)
@@ -29,7 +29,7 @@ DOWN_SAVE_DIR = os.path.join(DOWNLOAD_DIR, "courses")
 os.makedirs(BASE_SAVE_DIR, exist_ok=True)
 os.makedirs(DOWN_SAVE_DIR, exist_ok=True)
 
-SESSION_ID = "REDACTED_SESSION_ID"
+SESSION_ID = os.environ["INHA_SESSION_ID"]
 
 
 # ==============================
