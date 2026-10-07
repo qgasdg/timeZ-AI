@@ -34,7 +34,7 @@
 ## 폴더 구조
 
 ```
-.
+timeZ-AI/
 ├─ logic/
 │  ├─ convert/          강의계획서 수집 → JSON 변환 → 정규화
 │  ├─ recommendation/   임베딩, FAISS 저장, 추천, 시각화
