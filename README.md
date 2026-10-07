@@ -13,23 +13,23 @@
 1. **사용자 프로필**: 들은 과목(학수번호)의 임베딩 평균을 정규화합니다.
 2. **후보 검색**: FAISS 내적 검색으로 후보 1,000개를 뽑습니다.
 3. **주제 군집**: 후보를 KMeans로 10개 군집으로 나눕니다.
-4. **재정렬** ([MaxSum](#maxsum) + [xQuAD](#xquad)): 아래 점수가 가장 높은 과목을 하나씩 골라 500개를 채웁니다.
+4. **재정렬** (MaxSum<sup>[4](#maxsum)</sup> + xQuAD<sup>[5](#xquad)</sup>): 아래 점수가 가장 높은 과목을 하나씩 골라 500개를 채웁니다.
 
    ```
    score = 0.6 × 사용자 유사도 − 0.25 × 이미 고른 과목과의 평균 유사도 + 0.15 × 군집 커버리지 이득
    ```
 
-`logic/recommendation/algorithms.py`에서 [top-k](#top-k), [threshold](#threshold), [MMR](#mmr), [MaxSum](#maxsum), [xQuAD](#xquad)를 서로 비교할 수 있습니다.
+`logic/recommendation/algorithms.py`에서 top-k<sup>[1](#top-k)</sup>, threshold<sup>[2](#threshold)</sup>, MMR<sup>[3](#mmr)</sup>, MaxSum<sup>[4](#maxsum)</sup>, xQuAD<sup>[5](#xquad)</sup>를 서로 비교할 수 있습니다.
 
 ### 사용한 기법
 
-- <a id="top-k"></a>**top-k**: 사용자 프로필과 코사인 유사도가 높은 순으로 k개를 고릅니다.
-- <a id="threshold"></a>**threshold**: 유사도가 임계값 이하인 과목만 남깁니다. 이미 들은 과목과 거의 같은 과목을 빼는 용도입니다.
-- <a id="mmr"></a>**MMR** (Maximal Marginal Relevance): 사용자 유사도는 높이고, 이미 고른 과목 중 *가장 비슷한 것*과의 유사도는 깎아서 하나씩 고릅니다.
-- <a id="maxsum"></a>**MaxSum**: MMR과 같지만, 이미 고른 과목들과의 *평균* 유사도를 깎습니다. 한 과목에 덜 민감합니다.
-- <a id="xquad"></a>**xQuAD**: 후보를 KMeans로 주제 군집으로 나눈 뒤, 아직 덜 뽑힌 군집의 과목에 가산점을 줍니다. 추천이 한 분야에 몰리지 않게 합니다.
+1. <a id="top-k"></a>**top-k**: 사용자 프로필과 코사인 유사도가 높은 순으로 k개를 고릅니다.
+2. <a id="threshold"></a>**threshold**: 유사도가 임계값 이하인 과목만 남깁니다. 이미 들은 과목과 거의 같은 과목을 빼는 용도입니다.
+3. <a id="mmr"></a>**MMR** (Maximal Marginal Relevance): 사용자 유사도는 높이고, 이미 고른 과목 중 *가장 비슷한 것*과의 유사도는 깎아서 하나씩 고릅니다.
+4. <a id="maxsum"></a>**MaxSum**: MMR과 같지만, 이미 고른 과목들과의 *평균* 유사도를 깎습니다. 한 과목에 덜 민감합니다.
+5. <a id="xquad"></a>**xQuAD**: 후보를 KMeans로 주제 군집으로 나눈 뒤, 아직 덜 뽑힌 군집의 과목에 가산점을 줍니다. 추천이 한 분야에 몰리지 않게 합니다.
 
-최종 점수식의 두 번째 항이 [MaxSum](#maxsum), 세 번째 항이 [xQuAD](#xquad)에서 왔습니다.
+최종 점수식의 두 번째 항이 MaxSum<sup>[4](#maxsum)</sup>, 세 번째 항이 xQuAD<sup>[5](#xquad)</sup>에서 왔습니다.
 
 ## 폴더 구조
 
